@@ -18,3 +18,4 @@ trials/
 results/
 human subsets/
 .vscode/
+.DS_Store
