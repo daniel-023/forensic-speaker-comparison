@@ -1,0 +1,14 @@
+{
+    "model": "ecapa",
+    "nsc_part": "pt2",
+    "num_trials_total": 5850,
+    "num_trials_scored": 5850,
+    "num_trials_missing_embeddings": 0,
+    "EER": 0.029413580894470215,
+    "EER_threshold": 0.4285210072994232,
+    "accuracy": 0.9707692307692307,
+    "FPR": 0.029444444444444443,
+    "FNR": 0.029135802469135802,
+    "TPR": 0.9708641975308642,
+    "num_mispredicted_pairs": 171
+}

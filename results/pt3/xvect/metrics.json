@@ -1,0 +1,14 @@
+{
+    "model": "xvect",
+    "nsc_part": "pt3",
+    "num_trials_total": 10130,
+    "num_trials_scored": 10130,
+    "num_trials_missing_embeddings": 0,
+    "EER": 0.14491979777812958,
+    "EER_threshold": 0.944378137588501,
+    "accuracy": 0.8549851924975321,
+    "FPR": 0.1450657894736842,
+    "FNR": 0.14493827160493827,
+    "TPR": 0.8550617283950617,
+    "num_mispredicted_pairs": 1469
+}
