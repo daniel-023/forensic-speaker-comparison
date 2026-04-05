@@ -2,8 +2,6 @@
 
 Automatic speaker comparison pipeline using ECAPA-TDNN and X-vector embeddings on Singapore English speech data, with per-part evaluation and human-subset sampling.
 
-## Academic Context
-
 This repository was developed for **HG4022 Forensic Linguistics** at **Nanyang Technological University (NTU)**.
 
 ## Project Objectives
