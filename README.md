@@ -19,7 +19,7 @@ This repository was developed for **HG4022 Forensic Linguistics** at **Nanyang T
 
 EER comparison across NSC parts for X-vector and ECAPA-TDNN:
 
-![EER grouped bar plot](figures/eval/eer_grouped_bar.png)
+<img src="figures/eval/eer_grouped_bar.png" alt="EER grouped bar plot" width="650">
 
 ## Project Layout
 
