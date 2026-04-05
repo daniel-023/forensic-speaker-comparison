@@ -1,0 +1,19 @@
+# OS / editor
+.DS_Store
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Local data and artifacts
+audio/
+trump/
+pretrained_models/
+embeddings/
+trials/
+results/
+human subsets/
