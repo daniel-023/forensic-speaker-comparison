@@ -1,10 +1,27 @@
 # Forensic Speaker Comparison
 
-Lightweight pipeline for speaker-pair generation, embedding extraction, evaluation outputs, and model comparison plots across NSC parts (`pt1`-`pt3`).
+Automatic speaker comparison pipeline using ECAPA-TDNN and X-vector embeddings on Singapore English speech data, with per-part evaluation and human-subset sampling.
+
+## Academic Context
+
+This repository was developed for **HG4022 Forensic Linguistics** at **Nanyang Technological University (NTU)**.
+
+## Project Objectives
+
+- Build same-speaker and different-speaker trial pairs from Singapore English speech.
+- Run off-the-shelf speaker encoders (SpeechBrain ECAPA-TDNN and X-vector).
+- Evaluate performance using Accuracy, FPR, FNR, and EER.
+- Support comparison with a human listening experiment on sampled pairs.
 
 ## Pipeline
 
 ![Speaker comparison pipeline](figures/speaker_comparison.png)
+
+## Model Results
+
+EER comparison across NSC parts for X-vector and ECAPA-TDNN:
+
+![EER grouped bar plot](figures/eval/eer_grouped_bar.png)
 
 ## Project Layout
 
@@ -12,7 +29,7 @@ Lightweight pipeline for speaker-pair generation, embedding extraction, evaluati
 - `trials/<part>/trials.csv`: generated target/non-target pairs
 - `embeddings/<part>/<model>/embeddings.pt`: extracted speaker embeddings
 - `results/<part>/<model>/metrics.json`: per-model metrics by NSC part
-- `results/*.png`: cross-part comparison plots
+- `figures/eval/*.png`: cross-part comparison plots
 
 ## Setup
 
@@ -39,7 +56,7 @@ python inference.py --nsc-part pt1 --audio-root audio --model all
 3. Plot model comparison from existing `results/*/*/metrics.json`:
 
 ```bash
-python plot_eval.py --results-root results --out-dir results --models xvect ecapa
+python plot_eval.py --results-root results --out-dir figures/eval --models xvect ecapa
 ```
 
 4. Build human listening subset CSVs (default: all 3 parts):
@@ -47,12 +64,6 @@ python plot_eval.py --results-root results --out-dir results --models xvect ecap
 ```bash
 python human_subset.py --trials-root trials --out-dir "human subsets"
 ```
-
-## Notes
-
-- Parts are fixed to `pt1`, `pt2`, `pt3` in plotting scripts.
-- Model keys: `ecapa` and `xvect`.
-- `test.py` is a quick cosine-similarity sanity check on sample files.
 
 ## References
 
