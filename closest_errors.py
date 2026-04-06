@@ -30,63 +30,12 @@ def parse_args():
             "Default: results/closest_errors_<model>_audio"
         ),
     )
-    parser.add_argument(
-        "--allow-utt-overlap",
-        action="store_true",
-        help="Allow utt overlap between selected FP/FN in the same part.",
-    )
     return parser.parse_args()
 
 
 def load_rows(csv_path: Path):
     with csv_path.open(newline="") as f:
         return list(csv.DictReader(f))
-
-
-def pair_key(row):
-    return tuple(sorted((row["utt1"], row["utt2"])))
-
-
-def utt_set(row):
-    return {row["utt1"], row["utt2"]}
-
-
-def select_part_errors(rows, allow_utt_overlap=False):
-    """Select closest FP/FN for one part with optional no-overlap constraint."""
-    false_pos = [r for r in rows if r.get("error_type") == "false_positive"]
-    false_neg = [r for r in rows if r.get("error_type") == "false_negative"]
-
-    false_pos.sort(key=lambda r: r["score"], reverse=True)  # highest score first
-    false_neg.sort(key=lambda r: r["score"])                # lowest score first
-
-    selected_fp = false_pos[0] if false_pos else None
-    selected_fn = false_neg[0] if false_neg else None
-    had_overlap_fallback = False
-
-    if (
-        selected_fp is not None
-        and selected_fn is not None
-        and not allow_utt_overlap
-        and not utt_set(selected_fp).isdisjoint(utt_set(selected_fn))
-    ):
-        # Try to find the best non-overlapping combination.
-        found = None
-        for fp in false_pos:
-            fp_utts = utt_set(fp)
-            for fn in false_neg:
-                if fp_utts.isdisjoint(utt_set(fn)):
-                    found = (fp, fn)
-                    break
-            if found:
-                break
-
-        if found:
-            selected_fp, selected_fn = found
-        else:
-            # Keep the extrema but report fallback.
-            had_overlap_fallback = True
-
-    return selected_fp, selected_fn, had_overlap_fallback
 
 
 def build_utt_index(part_audio_root: Path):
@@ -179,8 +128,6 @@ def main():
 
     selected = []
     missing_parts = []
-    overlap_fallback_parts = []
-    seen_pair_keys = set()
 
     for part in PARTS:
         mispred_path = results_root / part / args.model / "mispredicted_pairs.csv"
@@ -195,27 +142,20 @@ def main():
         for row in rows:
             row["score"] = float(row["score"])
 
-        best_fp, best_fn, had_overlap_fallback = select_part_errors(
-            rows, allow_utt_overlap=args.allow_utt_overlap
-        )
-        if had_overlap_fallback:
-            overlap_fallback_parts.append(part)
+        false_pos = [r for r in rows if r.get("error_type") == "false_positive"]
+        false_neg = [r for r in rows if r.get("error_type") == "false_negative"]
 
-        if best_fp:
-            pk = (part, pair_key(best_fp))
-            if pk not in seen_pair_keys:
-                best_fp["part"] = part
-                best_fp["selection_rule"] = "false_positive_max_score"
-                selected.append(best_fp)
-                seen_pair_keys.add(pk)
+        if false_pos:
+            best_fp = max(false_pos, key=lambda r: r["score"])
+            best_fp["part"] = part
+            best_fp["selection_rule"] = "false_positive_max_score"
+            selected.append(best_fp)
 
-        if best_fn:
-            pk = (part, pair_key(best_fn))
-            if pk not in seen_pair_keys:
-                best_fn["part"] = part
-                best_fn["selection_rule"] = "false_negative_min_score"
-                selected.append(best_fn)
-                seen_pair_keys.add(pk)
+        if false_neg:
+            best_fn = min(false_neg, key=lambda r: r["score"])
+            best_fn["part"] = part
+            best_fn["selection_rule"] = "false_negative_min_score"
+            selected.append(best_fn)
 
     if not selected:
         raise RuntimeError("No selected errors found. Check results path/model.")
@@ -250,12 +190,6 @@ def main():
 
     if missing_parts:
         print(f"Skipped parts (missing file): {', '.join(missing_parts)}")
-    if overlap_fallback_parts:
-        print(
-            "Warning: Could not avoid utt overlap in parts: "
-            + ", ".join(overlap_fallback_parts)
-            + " (used strict extrema)."
-        )
 
     for row in selected:
         print(
