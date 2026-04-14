@@ -21,28 +21,6 @@ EER comparison across NSC parts:
 
 <img src="figures/eval/eer_grouped_bar.png" alt="EER grouped bar plot" width="650">
 
-## Project Layout
-
-```text
-forensic-speaker-comparison/
-├── app.py
-├── dataset.py
-├── inference.py
-├── eval.py
-├── plot_eval.py
-├── human_subset.py
-├── closest_errors.py
-├── demo/
-│   └── samples/
-├── figures/
-│   └── eval/
-├── audio/
-├── trials/                 
-├── embeddings/             
-├── results/                
-└── pretrained_models/      
-```
-
 ## Setup
 
 ```bash
