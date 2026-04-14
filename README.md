@@ -100,11 +100,6 @@ In the app:
 - Play the two sample audios
 - Click `Compare` to get similarity score and decision
 
-## Human Comparison in Plots
-
-Human FPR/FNR/Accuracy values are currently defined in `plot_eval.py` under `HUMAN_PART_METRICS`.
-Update those values there when new human results are available.
-
 ## References
 
 - https://huggingface.co/blog/norwooodsystems/ecapa-vs-xvector-speaker-recognition-comparison
