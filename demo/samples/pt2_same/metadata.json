@@ -5,6 +5,6 @@
   "utt_a": "SPEAKER2123_1.wav",
   "utt_b": "SPEAKER2123_10.wav",
   "gender": "F",
-  "age_bin": "(32,43]",
+  "age_bin": "32-43",
   "ethnicity": "CHINESE"
 }

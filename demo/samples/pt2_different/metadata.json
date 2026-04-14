@@ -5,6 +5,6 @@
   "utt_a": "SPEAKER2217_1.wav",
   "utt_b": "SPEAKER3010_8.wav",
   "gender": "M",
-  "age_bin": "(24,32]",
+  "age_bin": "24-32",
   "ethnicity": "MALAY"
 }

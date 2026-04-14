@@ -66,12 +66,6 @@ def load_sample_pairs(samples_root: Path = SAMPLES_ROOT):
     return pairs
 
 
-def format_age_bin(age_bin: str) -> str:
-    """'(24,31]' or '24_31' → '24–31'"""
-    s = re.sub(r"^[\(\[]|[\)\]]$", "", age_bin.strip())
-    return s.replace(",", "–").replace("_", "–")
-
-
 def render_result(score: float, threshold: float, true_label: str = ""):
     is_match = score >= threshold
     c1, c2, c3 = st.columns(3)
@@ -140,7 +134,7 @@ def main():
         st.caption("Speaker demographics")
         c1, c2, c3 = st.columns(3)
         c1.metric("Gender", selected["gender"])
-        c2.metric("Age group", format_age_bin(selected["age_bin"]))
+        c2.metric("Age group", selected["age_bin"])
         c3.metric("Ethnicity", selected["ethnicity"].title())
 
     st.divider()
