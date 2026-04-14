@@ -23,24 +23,25 @@ EER comparison across NSC parts:
 
 ## Project Layout
 
-### Tracked on GitHub
-
-- `app.py`: Streamlit demo app entrypoint
-- `dataset.py`, `inference.py`, `eval.py`, `plot_eval.py`, `human_subset.py`, `closest_errors.py`
-- `demo/samples/`: curated sample pairs used by the demo app
-- `figures/` and `figures/eval/`: presentation-ready plots
-- `requirements.txt`: project dependencies
-
-### Local / Generated (usually not pushed)
-
-The following are created or filled locally and are ignored in `.gitignore`:
-
-- `audio/nsc_pt{1,2,3}_strata/`: full NSC audio corpus
-- `pretrained_models/`: downloaded SpeechBrain models
-- `trials/<part>/trials.csv`: generated same/different trial lists
-- `embeddings/<part>/<model>/embeddings.pt`: extracted speaker embeddings
-- `results/<part>/<model>/...`: metrics, error analysis, intermediate outputs
-- `human subsets/`: generated subset CSVs for listening experiments
+```text
+forensic-speaker-comparison/
+├── app.py
+├── dataset.py
+├── inference.py
+├── eval.py
+├── plot_eval.py
+├── human_subset.py
+├── closest_errors.py
+├── demo/
+│   └── samples/
+├── figures/
+│   └── eval/
+├── audio/
+├── trials/                 
+├── embeddings/             
+├── results/                
+└── pretrained_models/      
+```
 
 ## Setup
 
