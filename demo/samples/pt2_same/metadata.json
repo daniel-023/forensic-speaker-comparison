@@ -1,0 +1,10 @@
+{
+  "part": "pt2",
+  "label": "same",
+  "stratum": "nsc_pt2.F.(32,43].CHINESE",
+  "utt_a": "SPEAKER2123_1.wav",
+  "utt_b": "SPEAKER2123_10.wav",
+  "gender": "F",
+  "age_bin": "(32,43]",
+  "ethnicity": "CHINESE"
+}

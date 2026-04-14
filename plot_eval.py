@@ -7,11 +7,19 @@ import numpy as np
 
 MODEL_A_COLOR = "#7C83FD"  # periwinkle
 MODEL_B_COLOR = "#2CB67D"  # teal green
+HUMAN_COLOR = "#F4A261"    # warm orange
 PARTS = ["pt1", "pt2", "pt3"]
 
 MODEL_LABELS = {
     "xvect": "X-vector",
     "ecapa": "ECAPA-TDNN",
+    "human": "Human",
+}
+HUMAN_PART_METRICS = {
+    "FPR": {"pt1": 0.125, "pt2": 0.1522, "pt3": 0.1842},
+    "FNR": {"pt1": 0.125, "pt2": 0.0417, "pt3": 0.0833},
+    "Accuracy": {"pt1": 0.875, "pt2": 0.904, "pt3": 0.872},
+    "EER": {"pt1": 0.1310, "pt2": 0.0966, "pt3": 0.1635}
 }
 ETHNICITIES = ["CHINESE", "INDIAN", "MALAY"]
 ETHNICITY_COLORS = {
@@ -83,19 +91,19 @@ def set_percent_axis(ax, values, factor=1.25):
     ax.set_ylim(0, upper)
 
 
-def collect_metric_series(results_root, model_a, model_b, metric):
-    a_vals = []
-    b_vals = []
-    kept_parts = []
+def collect_metric_by_part(results_root, models, metric):
+    by_part = {}
     for part in PARTS:
-        a = load_metric(results_root, part, model_a, metric)
-        b = load_metric(results_root, part, model_b, metric)
-        if a is None or b is None:
-            continue
-        kept_parts.append(part.upper())
-        a_vals.append(a * 100.0)
-        b_vals.append(b * 100.0)
-    return kept_parts, a_vals, b_vals
+        vals = []
+        for model in models:
+            v = load_metric(results_root, part, model, metric)
+            if v is None:
+                vals = None
+                break
+            vals.append(v * 100.0)
+        if vals is not None:
+            by_part[part.upper()] = vals
+    return by_part
 
 
 def load_csv_rows(path):
@@ -113,23 +121,26 @@ def parse_ethnicity(row):
     return ""
 
 
-def _render_bar_subplot(ax, parts, vals_a, vals_b, model_a, model_b, ylabel, y_offset, shared_vals=None):
-    """Render a single grouped bar subplot. Title and figure layout are the caller's responsibility."""
+def plot_grouped_series(ax, parts, series, ylabel, y_offset, shared_vals=None, legend_y=1.02):
+    """
+    Render grouped bar series on one axis.
+    series: list of (label, values, color)
+    """
     x = np.arange(len(parts))
-    width = 0.36
+    n_series = max(1, len(series))
+    width = 0.8 / n_series
+    start = -width * (n_series - 1) / 2.0
+    all_vals = []
 
-    bars_a = ax.bar(x - width / 2, vals_a, width=width, label=model_label(model_a), color=MODEL_A_COLOR)
-    bars_b = ax.bar(x + width / 2, vals_b, width=width, label=model_label(model_b), color=MODEL_B_COLOR)
-
+    for i, (label, vals, color) in enumerate(series):
+        bars = ax.bar(x + start + i * width, vals, width=width, label=label, color=color)
+        add_value_labels(ax, bars, y_offset=y_offset)
+        all_vals.extend(vals)
     ax.set_xticks(x)
     ax.set_xticklabels(parts)
     style_axes(ax, ylabel)
-    set_percent_axis(ax, (shared_vals if shared_vals is not None else vals_a + vals_b), factor=1.18)
-    ax.legend(frameon=False, loc="upper center", bbox_to_anchor=(0.5, 1.02), ncol=2)
-    add_value_labels(ax, bars_a, y_offset=y_offset)
-    add_value_labels(ax, bars_b, y_offset=y_offset)
-
-    return bars_a, bars_b
+    set_percent_axis(ax, (shared_vals if shared_vals is not None else all_vals), factor=1.18)
+    ax.legend(frameon=False, loc="upper center", bbox_to_anchor=(0.5, legend_y), ncol=len(series))
 
 
 def plot_grouped_metric(
@@ -142,16 +153,30 @@ def plot_grouped_metric(
     ylabel,
     out_filename,
     y_offset,
+    include_human=False,
+    human_metric_key=None,
 ):
-    parts, vals_a, vals_b = collect_metric_series(results_root, model_a, model_b, metric_key)
+    by_part = collect_metric_by_part(results_root, [model_a, model_b], metric_key)
+    parts = [p.upper() for p in PARTS if p.upper() in by_part]
     if not parts:
         raise RuntimeError(f"No parts with {metric_key} for both models.")
+    vals_a = [by_part[p][0] for p in parts]
+    vals_b = [by_part[p][1] for p in parts]
 
     fig, ax = plt.subplots(figsize=(9, 5))
-    _render_bar_subplot(ax, parts, vals_a, vals_b, model_a, model_b, ylabel, y_offset)
+    series = [
+        (model_label(model_a), vals_a, MODEL_A_COLOR),
+        (model_label(model_b), vals_b, MODEL_B_COLOR),
+    ]
+    if include_human:
+        if not human_metric_key or human_metric_key not in HUMAN_PART_METRICS:
+            raise RuntimeError(f"Missing human metric key for {metric_key}.")
+        vals_h = [HUMAN_PART_METRICS[human_metric_key][p.lower()] * 100.0 for p in parts]
+        series.append((model_label("human"), vals_h, HUMAN_COLOR))
 
+    plot_grouped_series(ax, parts, series, ylabel=ylabel, y_offset=y_offset)
     ax.set_title(title, pad=8)
-    fig.tight_layout(rect=[0, 0, 1, 0.95])
+    fig.tight_layout(rect=(0, 0, 1, 0.95))
 
     out_path = Path(out_dir) / out_filename
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -161,36 +186,38 @@ def plot_grouped_metric(
 
 
 def plot_fpr_fnr(results_root, out_dir, model_a, model_b):
-    parts_fpr, fpr_a, fpr_b = collect_metric_series(results_root, model_a, model_b, "FPR")
-    parts_fnr, fnr_a, fnr_b = collect_metric_series(results_root, model_a, model_b, "FNR")
-    if not parts_fpr or not parts_fnr:
+    fpr_by_part = collect_metric_by_part(results_root, [model_a, model_b], "FPR")
+    fnr_by_part = collect_metric_by_part(results_root, [model_a, model_b], "FNR")
+    if not fpr_by_part or not fnr_by_part:
         raise RuntimeError("No parts with FPR/FNR for both models.")
 
-    parts = [p.upper() for p in PARTS if p.upper() in parts_fpr and p.upper() in parts_fnr]
+    parts = [p.upper() for p in PARTS if p.upper() in fpr_by_part and p.upper() in fnr_by_part]
+    fpr_a = [fpr_by_part[p][0] for p in parts]
+    fpr_b = [fpr_by_part[p][1] for p in parts]
+    fnr_a = [fnr_by_part[p][0] for p in parts]
+    fnr_b = [fnr_by_part[p][1] for p in parts]
 
-    idx_map_fpr = {p: i for i, p in enumerate(parts_fpr)}
-    idx_map_fnr = {p: i for i, p in enumerate(parts_fnr)}
-    fpr_a = [fpr_a[idx_map_fpr[p]] for p in parts]
-    fpr_b = [fpr_b[idx_map_fpr[p]] for p in parts]
-    fnr_a = [fnr_a[idx_map_fnr[p]] for p in parts]
-    fnr_b = [fnr_b[idx_map_fnr[p]] for p in parts]
-
-    shared_vals = fpr_a + fpr_b + fnr_a + fnr_b
+    fpr_h = [HUMAN_PART_METRICS["FPR"][p.lower()] * 100.0 for p in parts]
+    fnr_h = [HUMAN_PART_METRICS["FNR"][p.lower()] * 100.0 for p in parts]
+    shared_vals = fpr_a + fpr_b + fpr_h + fnr_a + fnr_b + fnr_h
 
     fig, axes = plt.subplots(1, 2, figsize=(13, 5), sharey=True)
-
-    _render_bar_subplot(
-        axes[0], parts, fpr_a, fpr_b, model_a, model_b,
-        ylabel="Rate (%)", y_offset=0.08, shared_vals=shared_vals,
-    )
-    _render_bar_subplot(
-        axes[1], parts, fnr_a, fnr_b, model_a, model_b,
-        ylabel="Rate (%)", y_offset=0.08, shared_vals=shared_vals,
-    )
+    fpr_series = [
+        (model_label(model_a), fpr_a, MODEL_A_COLOR),
+        (model_label(model_b), fpr_b, MODEL_B_COLOR),
+        (model_label("human"), fpr_h, HUMAN_COLOR),
+    ]
+    fnr_series = [
+        (model_label(model_a), fnr_a, MODEL_A_COLOR),
+        (model_label(model_b), fnr_b, MODEL_B_COLOR),
+        (model_label("human"), fnr_h, HUMAN_COLOR),
+    ]
+    plot_grouped_series(axes[0], parts, fpr_series, ylabel="Rate (%)", y_offset=0.08, shared_vals=shared_vals)
+    plot_grouped_series(axes[1], parts, fnr_series, ylabel="Rate (%)", y_offset=0.08, shared_vals=shared_vals)
 
     axes[0].set_title("FPR by NSC Part", pad=8)
     axes[1].set_title("FNR by NSC Part", pad=8)
-    fig.tight_layout(rect=[0, 0, 1, 0.95])
+    fig.tight_layout(rect=(0, 0, 1, 0.95))
 
     out_path = Path(out_dir) / "fpr_fnr_bar.png"
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -309,6 +336,8 @@ def main():
         ylabel="EER (%)",
         out_filename="eer_grouped_bar.png",
         y_offset=0.08,
+        include_human=True,
+        human_metric_key="EER",
     )
     plot_grouped_metric(
         args.results_root,
@@ -320,6 +349,8 @@ def main():
         ylabel="Accuracy (%)",
         out_filename="accuracy_grouped_bar.png",
         y_offset=0.06,
+        include_human=True,
+        human_metric_key="Accuracy",
     )
     plot_fpr_fnr(args.results_root, args.out_dir, model_a, model_b)
     plot_fp_fn_by_ethnicity(

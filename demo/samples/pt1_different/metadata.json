@@ -1,0 +1,10 @@
+{
+  "part": "pt1",
+  "label": "different",
+  "stratum": "nsc_pt1.F.(31,44].INDIAN",
+  "utt_a": "SPEAKER0406_1.wav",
+  "utt_b": "SPEAKER0720_6.wav",
+  "gender": "F",
+  "age_bin": "(31,44]",
+  "ethnicity": "INDIAN"
+}

@@ -1,0 +1,10 @@
+{
+  "part": "pt3",
+  "label": "different",
+  "stratum": "nsc_pt3.M.18_25.CHINESE",
+  "utt_a": "3001-1_1.wav",
+  "utt_b": "3119-1_3.wav",
+  "gender": "M",
+  "age_bin": "18_25",
+  "ethnicity": "CHINESE"
+}

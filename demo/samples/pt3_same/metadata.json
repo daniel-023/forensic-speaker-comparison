@@ -1,0 +1,10 @@
+{
+  "part": "pt3",
+  "label": "same",
+  "stratum": "nsc_pt3.F.35_45.INDIAN",
+  "utt_a": "3145-1_1.wav",
+  "utt_b": "3145-1_2.wav",
+  "gender": "F",
+  "age_bin": "35_45",
+  "ethnicity": "INDIAN"
+}

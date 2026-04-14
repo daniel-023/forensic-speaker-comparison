@@ -1,0 +1,15 @@
+[theme]
+primaryColor = "#2563eb"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f1f5f9"
+textColor = "#0f172a"
+font = "sans serif"
+
+[server]
+# Avoid Streamlit watcher introspection on SpeechBrain lazy modules
+# (can trigger optional numba import errors).
+fileWatcherType = "none"
+
+# Optional quality-of-life defaults for audio demos.
+maxUploadSize = 1024
+maxMessageSize = 1024
